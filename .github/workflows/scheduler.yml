@@ -1,7 +1,7 @@
 name: Weekly Maintenance
 on:
   schedule:
-    - cron: "*/2 * * * *" 
+    - cron: "10,15,20 * * * *" 
   workflow_dispatch: # Manual trigger option
 
 jobs:
