@@ -1,6 +1,7 @@
 name: Challenge 1 & 2 Node.js CI/CD
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
   pull_request:
@@ -12,7 +13,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     
     # Challenge 1: Fail-fast and continue-on-error logic
-    fail-fast: false
     continue-on-error: ${{ matrix.node-version == '22.x' }}
 
     strategy:
@@ -23,6 +23,7 @@ jobs:
           # Challenge 1: Exclude Node 18.x on windows-latest
           - node-version: 18.x
             os: windows-latest
+      fail-fast: false
 
     steps:
     - name: Checkout Source Code
