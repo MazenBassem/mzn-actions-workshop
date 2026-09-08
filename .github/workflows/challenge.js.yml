@@ -75,3 +75,11 @@ jobs:
           # ls -la dist/
           cat build_output.txt
           echo "Staging deployment complete!"
+
+  notify_failure:
+    name: Handle Failure
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "CRITICAL Build step failed!"
+        if: failure()
