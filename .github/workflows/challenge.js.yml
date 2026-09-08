@@ -71,6 +71,7 @@ jobs:
       - name: Deploy to staging
         run: |
           echo "Deploying to staging server..."
-          echo "Files to deploy:"
-          ls -la dist/
+          # echo "Files to deploy:"
+          # ls -la dist/
+          cat build_output.txt
           echo "Staging deployment complete!"
