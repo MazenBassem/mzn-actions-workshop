@@ -82,4 +82,4 @@ jobs:
     
     steps:
       - name: Alert Failure
-        run: echo "CRITICAL: Build step failed!"
+        run: echo "CRITICAL Build step failed!"
