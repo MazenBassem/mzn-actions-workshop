@@ -21,8 +21,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         exclude:
           # Challenge 1: Exclude Node 18.x on windows-latest
-          - node-version: 18.x
-            os: windows-latest
+          # - node-version: 18.x
+          - os: windows-latest
       fail-fast: false
 
     steps:
@@ -83,3 +83,47 @@ jobs:
     steps:
       - name: Alert Failure
         run: echo "CRITICAL Build step failed!"
+
+  package-and-publich:
+    needs: deploy-staging
+    name: 🐳 Package & Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v4.3.0
+
+      -  name: Docker Login
+         uses: docker/login-action@v4.6.0
+         with:
+           registry: ghcr.io
+           username: ${{ github.actor }}
+           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker Metadata action
+        id: meta
+        uses: docker/metadata-action@v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=tag
+            type=ref,event=pr
+            type=sha,event=branch,prefix=,suffix=,format=short
+
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v7.3.0
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
