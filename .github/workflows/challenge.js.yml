@@ -42,7 +42,35 @@ jobs:
       run: npm ci
          
     - name: Build Projects
-      run: npm run build --if-present
+      run: |
+        npm run build --if-present
+        echo "BUILD_ID=$RANDOM" > build_output.txt
+
+    - name: Upload File
+      uses: actions/upload-artifact@v4
+      with:
+        name: build_output
+        path: dist/
     
     - name: Run Tests
       run: npm test
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-build
+          path: dist/
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging server..."
+          echo "Files to deploy:"
+          ls -la dist/
+          echo "Staging deployment complete!"
