@@ -32,8 +32,9 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
-    - name: Vitest Coverage Report
+    - name: 'Vitest Coverage Report'
       uses: davelosert/vitest-coverage-report-action@v2.12.1
-      with:
-        vite-config-path: vite.config.ts
+      if: always()
+      # with:
+      #   vite-config-path: vite.config.ts
          # pr-number: 547a17553b7b0f13da073e4b166727c35aab53e9
