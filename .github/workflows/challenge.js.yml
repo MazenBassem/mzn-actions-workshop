@@ -4,6 +4,7 @@
 name: Challenge 1 Node.js CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
   pull_request:
