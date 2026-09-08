@@ -1,59 +1,55 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Challenge 1 Node.js CI
+name: Challenge 1 & 2 Node.js CI/CD
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:
-
 
 jobs:
   build:
-    name: 'Challenge 1'
-      
+    name: 'Build & Test (${{ matrix.os }} - Node ${{ matrix.node-version }})'
+    runs-on: ${{ matrix.os }}
+    
+    # Challenge 1: Fail-fast and continue-on-error logic
     fail-fast: false
-    continue-on-error: ${{ matrix.node-version == '22.x'}}
+    continue-on-error: ${{ matrix.node-version == '22.x' }}
 
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
         exclude:
+          # Challenge 1: Exclude Node 18.x on windows-latest
           - node-version: 18.x
             os: windows-latest
-        
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-        
-    runs-on:  ${{ matrix.os }}
 
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v4
-    
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        
+
     - name: Install Dependencies
       run: npm ci
-         
+
     - name: Build Projects
+      shell: bash
       run: |
         npm run build --if-present
         echo "BUILD_ID=$RANDOM" > build_output.txt
 
-    - name: Upload File
+    # Challenge 2: Upload artifact (Dynamic name avoids matrix collisions)
+    - name: Upload File Artifact
       uses: actions/upload-artifact@v4
       with:
         name: build-output-${{ matrix.node-version }}-${{ matrix.os }}
         path: build_output.txt
-    
+
     - name: Run Tests
       run: npm test
 
@@ -62,7 +58,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: staging
-    
+
     steps:
       - name: Download Artifact
         uses: actions/download-artifact@v4
@@ -73,17 +69,16 @@ jobs:
       - name: Deploy to staging
         run: |
           echo "Deploying to staging server..."
-          # echo "Files to deploy:"
-          # ls -la .
           cat build_output.txt
           echo "Staging deployment complete!"
 
   notify_failure:
     name: Handle Failure
     needs: build
+    # Job-level conditional ensures this runs when 'build' fails
+    if: ${{ always() && needs.build.result == 'failure' }}
     runs-on: ubuntu-latest
-    if:  ${{always() && needs.build.result == 'failure'}}
+    
     steps:
       - name: Alert Failure
         run: echo "CRITICAL: Build step failed!"
-        
