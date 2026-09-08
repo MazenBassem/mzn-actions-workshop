@@ -12,6 +12,9 @@ on:
 jobs:
   build:
     name: 'Challenge 1'
+      
+    fail-fast: false
+    continue-on-error: ${{ matrix.node-version == '22.x'}}
 
     strategy:
       matrix:
@@ -21,9 +24,6 @@ jobs:
           - node-version: 18.x
             os: windows-latest
         
-      fail-fast: false
-      
-    continue-on-error: ${{ matrix.node-version == '22.x'}}
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
         
     runs-on:  ${{ matrix.os }}
@@ -49,8 +49,8 @@ jobs:
     - name: Upload File
       uses: actions/upload-artifact@v4
       with:
-        name: build_output.txt
-        path: dist/
+        name: build-output-${{ matrix.node-version }}-${{ matrix.os }}
+        path: build_output.txt
     
     - name: Run Tests
       run: npm test
@@ -65,14 +65,14 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: build_output.txt
-          path: dist/
+          name: build-output-20.x-ubuntu-latest
+          path: .
 
       - name: Deploy to staging
         run: |
           echo "Deploying to staging server..."
           # echo "Files to deploy:"
-          # ls -la dist/
+          # ls -la .
           cat build_output.txt
           echo "Staging deployment complete!"
 
@@ -80,6 +80,8 @@ jobs:
     name: Handle Failure
     needs: build
     runs-on: ubuntu-latest
+    if:  ${{always() && needs.build.result == 'failure'}}
     steps:
-      - run: echo "CRITICAL Build step failed!"
-        if: failure()
+      - name: Alert Failure
+        run: echo "CRITICAL: Build step failed!"
+        
