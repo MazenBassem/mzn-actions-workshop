@@ -33,4 +33,4 @@ jobs:
     - name: Vitest Coverage Report
       uses: davelosert/vitest-coverage-report-action@v2.12.1
       with:
-         github-token: default
+         pr-number: 547a17553b7b0f13da073e4b166727c35aab53e9
