@@ -35,6 +35,6 @@ jobs:
     - name: 'Vitest Coverage Report'
       uses: davelosert/vitest-coverage-report-action@v2.12.1
       if: always()
-      # with:
-      #   vite-config-path: vite.config.ts
+      with:
+        vite-config-path: vite.config.ts
          # pr-number: 547a17553b7b0f13da073e4b166727c35aab53e9
