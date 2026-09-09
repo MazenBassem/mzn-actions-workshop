@@ -1,0 +1,135 @@
+name: Challenge 1 & 2 Node.js CI/CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  # Build and test the project across the Node.js and OS matrix.
+  build:
+    name: 'Build & Test (${{ matrix.os }} - Node ${{ matrix.node-version }})'
+    runs-on: ${{ matrix.os }}
+    
+    # Challenge 1: Fail-fast and continue-on-error logic
+    continue-on-error: ${{ matrix.node-version == '22.x' }}
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+        os: [ubuntu-latest, windows-latest]
+        exclude:
+          # Challenge 1: Exclude windows-latest
+          # - node-version: 18.x
+          - os: windows-latest
+      fail-fast: false
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Build Projects
+      shell: bash
+      run: |
+        npm run build --if-present
+        echo "BUILD_ID=$RANDOM" > build_output.txt
+
+    # Challenge 2: Upload artifact (Dynamic name avoids matrix collisions)
+    - name: Upload File Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-output-${{ matrix.node-version }}-${{ matrix.os }}
+        path: build_output.txt
+
+    - name: Run Tests
+      run: npm test
+
+  # Deploy the build artifact to the staging environment.
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output-20.x-ubuntu-latest
+          path: .
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging server..."
+          cat build_output.txt
+          echo "Staging deployment complete!"
+
+  # Notify when the build job fails.
+  notify_failure:
+    name: Handle Failure
+    needs: build
+    # Job-level conditional ensures this runs when 'build' fails
+    if: ${{ always() && needs.build.result != 'success' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Alert Failure
+        run: echo "CRITICAL Build step failed!"
+
+  # Build and publish the Docker image after staging deployment.
+  package-and-publish:
+    needs: deploy-staging
+    name: 🐳 Package & Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v4.3.0
+
+      -  name: Docker Login
+         uses: docker/login-action@v4.6.0
+         with:
+           registry: ghcr.io
+           username: ${{ github.actor }}
+           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker Metadata action
+        id: meta
+        uses: docker/metadata-action@v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=tag
+            type=ref,event=pr
+            type=sha,event=branch,prefix=,suffix=,format=short
+
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v7.3.0
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
