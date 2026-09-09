@@ -24,9 +24,9 @@ jobs:
         node-version: [18.x, 20.x, 22.x]
         os: [ubuntu-latest, windows-latest]
         exclude:
-          # Challenge 1: Exclude Node 18.x on windows-latest
-          - node-version: 18.x
-            os: windows-latest
+          # Challenge 1: Exclude windows-latest
+          # - node-version: 18.x
+          - os: windows-latest
       fail-fast: false
 
     steps:
@@ -83,7 +83,7 @@ jobs:
     name: Handle Failure
     needs: build
     # Job-level conditional ensures this runs when 'build' fails
-    if: ${{ always() && needs.build.result == 'failure' }}
+    if: ${{ always() && needs.build.result != 'success' }}
     runs-on: ubuntu-latest
     
     steps:
@@ -91,7 +91,7 @@ jobs:
         run: echo "CRITICAL Build step failed!"
 
   # Build and publish the Docker image after staging deployment.
-  package-and-publich:
+  package-and-publish:
     needs: deploy-staging
     name: 🐳 Package & Publish
     runs-on: ubuntu-latest
