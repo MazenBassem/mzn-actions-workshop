@@ -7,6 +7,10 @@ on:
 
 jobs:
   greet:
+    permissions:
+      contents: read
+      pull-requests: write
+      
     env:
        MY_ENV: John Doe
        

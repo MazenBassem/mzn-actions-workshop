@@ -1,0 +1,23 @@
+name: Weekly Maintenance
+on:
+  schedule:
+    - cron: "10,15,20 * * * *" 
+  workflow_dispatch: # Manual trigger option
+
+jobs:
+  maintenance:
+    env:
+      username: Mazen Bassem
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Print the input name to STDOUT
+        run: |
+          echo The username is $username it has been two minutes

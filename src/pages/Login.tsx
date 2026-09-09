@@ -72,6 +72,9 @@ const Login: FunctionComponent = (): ReactElement => {
         <Box sx={{ mt: 3 }}>
           <Button type="submit">Sign in</Button>
         </Box>
+        <Box sx={{ mt: 3 }}>
+          <Button type="submit">Create New User</Button>
+        </Box>
         {error && (
           <Flash variant="danger" sx={{ mt: 3 }}>
             {error}

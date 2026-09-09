@@ -29,7 +29,7 @@ const GHStyledLink = styled(Link)`
   padding: 0;
 
   &:hover {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 200, 0.7);
   }
 `;
 
