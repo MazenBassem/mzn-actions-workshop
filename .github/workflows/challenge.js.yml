@@ -11,6 +11,7 @@ permissions:
   contents: read
 
 jobs:
+  # Build and test the project across the Node.js and OS matrix.
   build:
     name: 'Build & Test (${{ matrix.os }} - Node ${{ matrix.node-version }})'
     runs-on: ${{ matrix.os }}
@@ -24,8 +25,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         exclude:
           # Challenge 1: Exclude Node 18.x on windows-latest
-          # - node-version: 18.x
-          - os: windows-latest
+          - node-version: 18.x
+            os: windows-latest
       fail-fast: false
 
     steps:
@@ -57,6 +58,7 @@ jobs:
     - name: Run Tests
       run: npm test
 
+  # Deploy the build artifact to the staging environment.
   deploy-staging:
     name: Deploy to Staging
     needs: build
@@ -76,6 +78,7 @@ jobs:
           cat build_output.txt
           echo "Staging deployment complete!"
 
+  # Notify when the build job fails.
   notify_failure:
     name: Handle Failure
     needs: build
@@ -87,6 +90,7 @@ jobs:
       - name: Alert Failure
         run: echo "CRITICAL Build step failed!"
 
+  # Build and publish the Docker image after staging deployment.
   package-and-publich:
     needs: deploy-staging
     name: 🐳 Package & Publish
